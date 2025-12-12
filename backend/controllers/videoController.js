@@ -2,20 +2,9 @@
 import * as videoService from '../services/videoService.js';
 import * as whisperService from '../services/whisperService.js';
 import * as renderService from '../services/renderService.js';
-import { createDatabaseService } from '../services/databaseService.js';
 import { createVideo, videoToJSON } from '../models/Video.js';
 
-// Initialize database service only if enabled and available
-let dbService = null;
-if (process.env.USE_DATABASE === 'true') {
-  try {
-    dbService = createDatabaseService();
-  } catch (error) {
-    console.warn('Database service initialization failed:', error.message);
-    console.warn('Continuing without database support.');
-    dbService = null;
-  }
-}
+
 
 export const uploadVideo = async (req, res) => {
   try {
@@ -25,11 +14,6 @@ export const uploadVideo = async (req, res) => {
 
     const videoData = await videoService.saveVideo(req.file);
     
-    // Save to database if enabled
-    if (dbService) {
-      videoData.id = await dbService.saveVideo(videoData);
-    }
-
     const video = createVideo(videoData);
 
     res.json({
@@ -62,10 +46,6 @@ export const generateCaptions = async (req, res) => {
     // Group into sentences
     const captions = whisperService.groupWordsIntoSentences(transcription.chunks);
 
-    // Save captions to database if enabled
-    if (dbService) {
-      await dbService.updateCaptions(filename, captions);
-    }
 
     // Note: Video is kept until rendering is complete to allow download with captions
     // It will be cleaned up after the user downloads the captioned video
@@ -132,10 +112,7 @@ export const getVideoInfo = async (req, res) => {
       return res.status(404).json({ error: 'Video not found' });
     }
 
-    let videoData = null;
-    if (dbService) {
-      videoData = await dbService.getVideo(filename);
-    }
+    const videoData = await videoService.getVideoInfo(filename);
 
     res.json({
       success: true,
@@ -149,13 +126,7 @@ export const getVideoInfo = async (req, res) => {
 
 export const getAllVideos = async (req, res) => {
   try {
-    if (!dbService) {
-      return res.status(400).json({ 
-        error: 'Database not enabled. Enable USE_DATABASE=true to use this endpoint.' 
-      });
-    }
-
-    const videos = await dbService.getAllVideos();
+    const videos = await videoService.getAllVideos();
     res.json({
       success: true,
       videos: videos

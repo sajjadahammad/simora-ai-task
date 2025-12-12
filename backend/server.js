@@ -60,7 +60,6 @@ if (process.env.VERCEL !== '1') {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📁 Upload directory: ${process.cwd()}/backend/uploads`);
     console.log(`🤖 Whisper Model: ${process.env.WHISPER_MODEL || 'Xenova/whisper-small'}`);
-    console.log(`💾 Database: ${process.env.USE_DATABASE === 'true' ? 'Enabled' : 'Disabled'}`);
     
     // Check FFmpeg availability
     if (ffmpegStatic) {

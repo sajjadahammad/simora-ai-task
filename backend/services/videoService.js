@@ -93,3 +93,55 @@ export const getVideoStream = (filename) => {
   return fs.createReadStream(videoPath);
 };
 
+export const getVideoInfo = async (filename) => {
+  const videoPath = getVideoPath(filename);
+  if (!fs.existsSync(videoPath)) {
+    throw new Error('Video file not found');
+  }
+
+  const stats = await fs.stat(videoPath);
+
+  return {
+    id: null,
+    filename,
+    originalName: filename,
+    path: videoPath,
+    size: stats.size,
+    mimetype: 'video/*',
+    uploadedAt: stats.mtime.toISOString(),
+    captions: null
+  };
+};
+
+export const getAllVideos = async (limit = 50) => {
+  try {
+    const files = await fs.readdir(uploadsDir);
+    const videoFiles = [];
+
+    for (const file of files) {
+      const filePath = path.join(uploadsDir, file);
+      try {
+        const stats = await fs.stat(filePath);
+        if (stats.isFile()) {
+          videoFiles.push({
+            filename: file,
+            path: filePath,
+            size: stats.size,
+            uploadedAt: stats.mtime.toISOString(),
+            hasCaptions: false
+          });
+        }
+      } catch (e) {
+        // ignore individual file errors
+      }
+    }
+
+    // Sort by uploadedAt desc
+    videoFiles.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+
+    return videoFiles.slice(0, limit);
+  } catch (e) {
+    return [];
+  }
+};
+
