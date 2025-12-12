@@ -54,17 +54,22 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📁 Upload directory: ${process.cwd()}/backend/uploads`);
-  console.log(`🤖 Whisper Model: ${process.env.WHISPER_MODEL || 'Xenova/whisper-small'}`);
-  console.log(`💾 Database: ${process.env.USE_DATABASE === 'true' ? 'Enabled' : 'Disabled'}`);
-  
-  // Check FFmpeg availability
-  if (ffmpegStatic) {
-    console.log(`✅ FFmpeg: Using bundled version from ffmpeg-static package`);
-  } else {
-    console.log(`⚠️  FFmpeg: Using system FFmpeg (if available)`);
-  }
-});
+// Start server (only when not in Vercel serverless)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📁 Upload directory: ${process.cwd()}/backend/uploads`);
+    console.log(`🤖 Whisper Model: ${process.env.WHISPER_MODEL || 'Xenova/whisper-small'}`);
+    console.log(`💾 Database: ${process.env.USE_DATABASE === 'true' ? 'Enabled' : 'Disabled'}`);
+    
+    // Check FFmpeg availability
+    if (ffmpegStatic) {
+      console.log(`✅ FFmpeg: Using bundled version from ffmpeg-static package`);
+    } else {
+      console.log(`⚠️  FFmpeg: Using system FFmpeg (if available)`);
+    }
+  });
+}
+
+// Export for Vercel serverless
+export default app;
