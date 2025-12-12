@@ -15,7 +15,7 @@ const outputsDir = path.join(__dirname, '..', 'outputs');
 [uploadsDir, tempDir, outputsDir].forEach(dir => {
   fs.ensureDirSync(dir);
 });
-
+  
 // Clean old files to prevent disk fill (files older than 10 minutes)
 const MAX_FILE_AGE_MS = 10 * 60 * 1000; // 10 minutes
 

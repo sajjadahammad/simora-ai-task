@@ -1,5 +1,5 @@
-// Whisper Service - Handles caption generation using LangChain with local Whisper model
-import { pipeline } from '@xenova/transformers';
+// Whisper Service - Handles caption generation using LangChain with Whisper model
+// Uses utility function to switch between local and Hugging Face based on environment
 import { DynamicStructuredTool } from '@langchain/core/tools';
 import { RunnableSequence } from '@langchain/core/runnables';
 import ffmpeg from 'fluent-ffmpeg';
@@ -8,6 +8,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { z } from 'zod';
+import { transcribeAudio, isProduction } from '../utils/whisperProvider.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,32 +21,8 @@ if (ffmpegStatic) {
   console.warn('⚠️  ffmpeg-static not found, falling back to system FFmpeg');
 }
 
-// Get model name from environment or use default
-const getModelName = () => {
-  return process.env.WHISPER_MODEL || 'Xenova/whisper-small';
-};
-
-// Initialize pipeline (lazy loading)
-let transcriber = null;
-
-const getTranscriber = async () => {
-  if (!transcriber) {
-    console.log('Loading Whisper model:', getModelName());
-    transcriber = await pipeline(
-      'automatic-speech-recognition',
-      getModelName(),
-      {
-        // These options improve transcription quality
-        chunk_length_s: 30,
-        stride_length_s: 5,
-      }
-    );
-    console.log('Whisper model loaded successfully');
-  }
-  return transcriber;
-};
-
-// Extract audio from video using ffmpeg - output as raw PCM
+// Extract audio from video using ffmpeg
+// Output as WAV in production (for Hugging Face) or PCM in development (for local model)
 const extractAudio = async (videoPath) => {
   return new Promise((resolve, reject) => {
     const tempDir = path.join(__dirname, '../temp');
@@ -53,16 +30,28 @@ const extractAudio = async (videoPath) => {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    // Output as raw 16-bit PCM for easier processing
-    const audioPath = path.join(tempDir, `audio_${Date.now()}.pcm`);
+    // In production, use WAV format for Hugging Face API
+    // In development, use raw PCM for local model
+    const useWav = isProduction();
+    const audioPath = path.join(tempDir, `audio_${Date.now()}.${useWav ? 'wav' : 'pcm'}`);
 
     console.log('Extracting audio from:', videoPath);
     console.log('Output audio path:', audioPath);
+    console.log('Format:', useWav ? 'WAV (for Hugging Face)' : 'PCM (for local model)');
 
-    ffmpeg(videoPath)
-      .toFormat('s16le')  // Raw 16-bit signed little-endian PCM
+    const ffmpegCommand = ffmpeg(videoPath)
       .audioFrequency(16000)  // 16kHz sample rate required by Whisper
-      .audioChannels(1)  // Mono
+      .audioChannels(1);  // Mono
+
+    if (useWav) {
+      // Output as WAV for Hugging Face API
+      ffmpegCommand.toFormat('wav');
+    } else {
+      // Output as raw 16-bit PCM for local model
+      ffmpegCommand.toFormat('s16le');
+    }
+
+    ffmpegCommand
       .on('start', (cmd) => {
         console.log('FFmpeg command:', cmd);
       })
@@ -127,8 +116,6 @@ const loadAudio = (audioPath) => {
 
 // Create LangChain tool for Whisper transcription
 const createWhisperTool = async () => {
-  const transcriber = await getTranscriber();
-
   return new DynamicStructuredTool({
     name: 'whisper_transcribe',
     description: 'Transcribes audio file to text with timestamps using Whisper model',
@@ -138,19 +125,24 @@ const createWhisperTool = async () => {
     func: async ({ audioPath }) => {
       try {
         console.log('Transcribing audio with LangChain tool...');
+        console.log('Environment:', isProduction() ? 'Production (Hugging Face)' : 'Development (Local)');
         
-        // Load and process audio for Node.js
-        const audioData = loadAudio(audioPath);
+        let output;
         
-        console.log('Starting Whisper transcription...');
-        
-        // Pass audio data directly to the pipeline
-        const output = await transcriber(audioData, {
-          return_timestamps: true,
-          chunk_length_s: 30,
-          stride_length_s: 5,
-          language: 'en',  // Can also try 'hi' for Hindi or null for auto-detect
-        });
+        if (isProduction()) {
+          // In production, pass audio file path directly to Hugging Face
+          console.log('Using Hugging Face API with audio file:', audioPath);
+          output = await transcribeAudio(audioPath, {
+            language: 'en',
+          });
+        } else {
+          // In development, load audio and use local model
+          const audioData = loadAudio(audioPath);
+          console.log('Starting local Whisper transcription...');
+          output = await transcribeAudio(audioData, {
+            language: 'en',
+          });
+        }
         
         console.log('Transcription output:', JSON.stringify(output).substring(0, 500));
         
