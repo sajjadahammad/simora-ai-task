@@ -15,7 +15,7 @@ export const getLocalModelName = () => {
 
 // Get model name for Hugging Face API (production)
 export const getHfModelName = () => {
-  return process.env.WHISPER_MODEL || 'openai/whisper-base';
+  return process.env.WHISPER_MODEL || 'openai/whisper-small';
 };
 
 // Get model name (backward compatibility)
