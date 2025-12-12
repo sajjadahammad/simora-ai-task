@@ -18,7 +18,10 @@ function App() {
     setVideoFile(file);
     setVideoUrl(url);
     setUploadedFilename(filename);
-    setCaptions([]);
+    // Clear captions when uploading new video or resetting
+    if (!file || !url || !filename) {
+      setCaptions([]);
+    }
   };
 
   const handleCaptionsGenerated = (newCaptions) => {

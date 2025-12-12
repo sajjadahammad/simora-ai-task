@@ -66,6 +66,19 @@ function VideoUpload({ onVideoUpload, onCaptionsGenerated }) {
     await handleGenerateCaptions(uploadedVideo.filename);
   };
 
+  const handleReset = () => {
+    setSelectedFile(null);
+    setUploadedVideo(null);
+    setUploadProgress(0);
+    // Reset file input
+    const fileInput = document.getElementById('video-input');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    // Clear video URL and captions in parent
+    onVideoUpload(null, null, null);
+  };
+
   const isUploading = uploadMutation.isPending;
   const isGenerating = captionMutation.isPending;
   const uploadError = uploadMutation.error;
@@ -172,23 +185,32 @@ function VideoUpload({ onVideoUpload, onCaptionsGenerated }) {
           <p className="text-green-700 font-medium text-sm mb-3 flex items-center gap-2">
             <span>✨</span> Video uploaded successfully!
           </p>
-          <button 
-            className="w-full py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 text-white font-medium rounded-lg hover:from-emerald-500 hover:to-teal-500 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            onClick={handleAutoGenerate}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                Generating captions...
-              </span>
-            ) : (
-              '🎯 Re-generate Captions'
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              className="flex-1 py-2.5 bg-gradient-to-r from-emerald-400 to-teal-400 text-white font-medium rounded-lg hover:from-emerald-500 hover:to-teal-500 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              onClick={handleAutoGenerate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Generating captions...
+                </span>
+              ) : (
+                '🎯 Re-generate Captions'
+              )}
+            </button>
+            <button 
+              className="flex-1 py-2.5 bg-gradient-to-r from-purple-400 to-pink-400 text-white font-medium rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              onClick={handleReset}
+              disabled={isUploading || isGenerating}
+            >
+              📤 Upload New Video
+            </button>
+          </div>
         </div>
       )}
     </div>
