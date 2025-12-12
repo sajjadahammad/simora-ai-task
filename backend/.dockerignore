@@ -1,0 +1,44 @@
+# Dependencies (will be installed fresh)
+node_modules
+package-lock.json
+
+# Uploaded files (use volumes in production)
+uploads/*
+temp/*
+outputs/*
+
+# Database
+*.sqlite
+*.db
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# Development files
+.git
+.gitignore
+*.md
+tests
+__tests__
+coverage
+.nyc_output
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (not needed inside container)
+Dockerfile
+.dockerignore
+docker-compose*.yml
