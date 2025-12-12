@@ -1,6 +1,6 @@
 // Whisper Provider Utility - Switches between local and Hugging Face based on environment
 import { pipeline } from '@xenova/transformers';
-import { HfInference } from '@huggingface/inference';
+import { InferenceClient } from '@huggingface/inference';
 import fs from 'fs';
 
 // Check if we're in production
@@ -8,9 +8,22 @@ export const isProduction = () => {
   return process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 };
 
-// Get model name from environment or use default
-export const getModelName = () => {
+// Get model name for local use (development)
+export const getLocalModelName = () => {
   return process.env.WHISPER_MODEL || 'Xenova/whisper-small';
+};
+
+// Get model name for Hugging Face API (production)
+export const getHfModelName = () => {
+  return process.env.WHISPER_MODEL || 'openai/whisper-tiny';
+};
+
+// Get model name (backward compatibility)
+export const getModelName = () => {
+  if (isProduction()) {
+    return getHfModelName();
+  }
+  return getLocalModelName();
 };
 
 // Get Hugging Face API token from environment
@@ -23,10 +36,11 @@ let localTranscriber = null;
 
 const getLocalTranscriber = async () => {
   if (!localTranscriber) {
-    console.log('Loading local Whisper model:', getModelName());
+    const modelName = getLocalModelName();
+    console.log('Loading local Whisper model:', modelName);
     localTranscriber = await pipeline(
       'automatic-speech-recognition',
-      getModelName(),
+      modelName,
       {
         chunk_length_s: 30,
         stride_length_s: 5,
@@ -44,9 +58,9 @@ const getHfClient = () => {
   if (!hfClient) {
     const token = getHfToken();
     if (!token) {
-      throw new Error('HUGGINGFACE_API_TOKEN is required in production environment');
+      throw new Error('HUGGINGFACE_API_KEY is required in production environment');
     }
-    hfClient = new HfInference(token);
+    hfClient = new InferenceClient(token);
     console.log('Hugging Face client initialized');
   }
   return hfClient;
@@ -66,7 +80,7 @@ const transcribeLocal = async (audioData, options = {}) => {
 // Transcribe using Hugging Face API (accepts audio file path or audio data)
 const transcribeHuggingFace = async (audioPathOrData, options = {}) => {
   const client = getHfClient();
-  const model = getModelName();
+  const model = getHfModelName();
   
   console.log('Transcribing with Hugging Face API:', model);
   
