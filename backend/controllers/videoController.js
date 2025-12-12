@@ -74,9 +74,27 @@ export const generateCaptions = async (req, res) => {
     });
   } catch (error) {
     console.error('Caption generation error:', error);
+    
+    // Determine error type for better frontend messaging
+    let errorType = 'UNKNOWN_ERROR';
+    let errorMessage = error.message || 'Failed to generate captions';
+    
+    if (errorMessage.includes('FFmpeg')) {
+      errorType = 'FFMPEG_ERROR';
+    } else if (errorMessage.includes('audio')) {
+      errorType = 'AUDIO_ERROR';
+    } else if (errorMessage.includes('model') || errorMessage.includes('Whisper')) {
+      errorType = 'MODEL_ERROR';
+    } else if (errorMessage.includes('memory') || errorMessage.includes('Memory')) {
+      errorType = 'MEMORY_ERROR';
+    } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+      errorType = 'TIMEOUT_ERROR';
+    }
+    
     res.status(500).json({ 
-      error: error.message || 'Failed to generate captions',
-      details: error.response?.data || null
+      error: errorMessage,
+      errorType: errorType,
+      details: error.stack?.split('\n').slice(0, 3).join('\n') || null
     });
   }
 };

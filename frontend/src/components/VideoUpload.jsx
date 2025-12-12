@@ -121,7 +121,17 @@ function VideoUpload({ onVideoUpload, onCaptionsGenerated }) {
 
       {captionError && (
         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-          ❌ {captionError.response?.data?.error || captionError.message}
+          <div className="font-medium">❌ Caption generation failed</div>
+          <div className="mt-1 text-red-500">
+            {captionError.response?.data?.error || captionError.message}
+          </div>
+          {captionError.response?.data?.details && (
+            <div className="mt-2 text-xs text-red-400 bg-red-100 p-2 rounded-lg overflow-auto max-h-24">
+              {typeof captionError.response.data.details === 'string' 
+                ? captionError.response.data.details 
+                : JSON.stringify(captionError.response.data.details, null, 2)}
+            </div>
+          )}
         </div>
       )}
 
