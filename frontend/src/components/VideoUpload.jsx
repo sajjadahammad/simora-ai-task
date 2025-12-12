@@ -171,8 +171,23 @@ function VideoUpload({ onVideoUpload, onCaptionsGenerated }) {
         </div>
       )}
 
+      {/* Caption Generation Status */}
+      {uploadedVideo && isGenerating && (
+        <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <div className="flex items-center justify-center gap-3">
+            <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            <p className="text-blue-700 font-medium text-sm">
+              🎬 Generating captions... This may take a moment
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Success State */}
-      {uploadedVideo && (
+      {uploadedVideo && !isGenerating && (
         <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
           <p className="text-green-700 font-medium text-sm mb-3 flex items-center gap-2">
             <span>✨</span> Video uploaded successfully!

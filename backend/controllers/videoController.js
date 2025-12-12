@@ -67,13 +67,8 @@ export const generateCaptions = async (req, res) => {
       await dbService.updateCaptions(filename, captions);
     }
 
-    // Clean up uploaded video to save disk space (captions already extracted)
-    try {
-      await videoService.deleteVideo(filename);
-      console.log('🧹 Cleaned up video after caption extraction:', filename);
-    } catch (cleanupErr) {
-      console.warn('Cleanup warning:', cleanupErr.message);
-    }
+    // Note: Video is kept until rendering is complete to allow download with captions
+    // It will be cleaned up after the user downloads the captioned video
 
     // Force garbage collection if available (helps with memory on limited RAM)
     if (global.gc) {
@@ -206,6 +201,14 @@ export const renderCaptionedVideo = async (req, res) => {
     res.download(outputPath, `captioned_${filename}`, (err) => {
       if (err) {
         console.error('Download error:', err);
+      } else {
+        // Clean up original video file after successful download (to save disk space)
+        try {
+          videoService.deleteVideo(filename);
+          console.log('🧹 Cleaned up original video after rendering:', filename);
+        } catch (cleanupErr) {
+          console.warn('Cleanup warning:', cleanupErr.message);
+        }
       }
       // Clean up the rendered file after download
       try {
