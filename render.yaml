@@ -9,7 +9,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node --expose-gc server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -17,6 +17,8 @@ services:
       - key: PORT
         value: 10000
       - key: WHISPER_MODEL
-        value: Xenova/whisper-small
+        value: Xenova/whisper-tiny.en
       - key: USE_DATABASE
         value: false
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=400

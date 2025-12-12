@@ -67,6 +67,19 @@ export const generateCaptions = async (req, res) => {
       await dbService.updateCaptions(filename, captions);
     }
 
+    // Clean up uploaded video to save disk space (captions already extracted)
+    try {
+      await videoService.deleteVideo(filename);
+      console.log('🧹 Cleaned up video after caption extraction:', filename);
+    } catch (cleanupErr) {
+      console.warn('Cleanup warning:', cleanupErr.message);
+    }
+
+    // Force garbage collection if available (helps with memory on limited RAM)
+    if (global.gc) {
+      global.gc();
+    }
+
     res.json({
       success: true,
       captions: captions,
