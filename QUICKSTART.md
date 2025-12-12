@@ -98,7 +98,7 @@ To enable SQLite database for storing video metadata:
 
 ### Backend won't start
 - Check if port 5000 is available
-- Verify `.env` file exists with valid Hugging Face API key
+- Verify `.env` file exists
 - Run `npm install` in backend directory
 
 ### Frontend won't start
