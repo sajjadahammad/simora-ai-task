@@ -1,0 +1,22 @@
+# Render.com deployment configuration
+# Only backend - frontend goes to Vercel
+
+services:
+  - type: web
+    name: remotion-captioning-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: WHISPER_MODEL
+        value: Xenova/whisper-small
+      - key: USE_DATABASE
+        value: false

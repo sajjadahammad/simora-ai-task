@@ -1,0 +1,2 @@
+export { RemotionRoot } from './Root';
+
