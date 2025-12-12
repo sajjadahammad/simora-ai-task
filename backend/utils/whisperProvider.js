@@ -115,7 +115,15 @@ const transcribeHuggingFace = async (audioPathOrData, options = {}) => {
     return response;
   } catch (error) {
     console.error('Hugging Face API error:', error);
-    throw new Error(`Hugging Face transcription failed: ${error.message}`);
+    // Sanitize error message - don't expose technical details
+    const errorMsg = error.message || 'Unknown error';
+    if (errorMsg.includes('No Inference Provider')) {
+      throw new Error('Transcription model is not available');
+    } else if (errorMsg.includes('API key') || errorMsg.includes('token')) {
+      throw new Error('Authentication failed');
+    } else {
+      throw new Error('Transcription service error');
+    }
   }
 };
 

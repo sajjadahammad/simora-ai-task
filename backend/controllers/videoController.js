@@ -88,26 +88,27 @@ export const generateCaptions = async (req, res) => {
   } catch (error) {
     console.error('Caption generation error:', error);
     
-    // Determine error type for better frontend messaging
-    let errorType = 'UNKNOWN_ERROR';
-    let errorMessage = error.message || 'Failed to generate captions';
+    // Create user-friendly error messages
+    let errorMessage = 'Failed to generate captions. Please try again.';
     
-    if (errorMessage.includes('FFmpeg')) {
-      errorType = 'FFMPEG_ERROR';
-    } else if (errorMessage.includes('audio')) {
-      errorType = 'AUDIO_ERROR';
-    } else if (errorMessage.includes('model') || errorMessage.includes('Whisper')) {
-      errorType = 'MODEL_ERROR';
-    } else if (errorMessage.includes('memory') || errorMessage.includes('Memory')) {
-      errorType = 'MEMORY_ERROR';
-    } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
-      errorType = 'TIMEOUT_ERROR';
+    const errorMsg = error.message || '';
+    
+    if (errorMsg.includes('FFmpeg') || errorMsg.includes('audio extraction')) {
+      errorMessage = 'Failed to process video audio. Please ensure the video file is valid.';
+    } else if (errorMsg.includes('model') || errorMsg.includes('Whisper') || errorMsg.includes('Inference Provider')) {
+      errorMessage = 'Transcription service is currently unavailable. Please try again later.';
+    } else if (errorMsg.includes('memory') || errorMsg.includes('Memory')) {
+      errorMessage = 'Video is too large to process. Please try a smaller video file.';
+    } else if (errorMsg.includes('timeout') || errorMsg.includes('Timeout')) {
+      errorMessage = 'Processing took too long. Please try a shorter video.';
+    } else if (errorMsg.includes('HUGGINGFACE_API_KEY')) {
+      errorMessage = 'Transcription service configuration error. Please contact support.';
+    } else if (errorMsg.includes('not found') || errorMsg.includes('not exist')) {
+      errorMessage = 'Video file not found. Please upload the video again.';
     }
     
     res.status(500).json({ 
-      error: errorMessage,
-      errorType: errorType,
-      details: error.stack?.split('\n').slice(0, 3).join('\n') || null
+      error: errorMessage
     });
   }
 };

@@ -300,7 +300,9 @@ export const transcribe = async (videoPath, filename) => {
     return transcription;
   } catch (error) {
     console.error('Transcription error:', error);
-    throw new Error(`Failed to transcribe video: ${error.message}`);
+    // Sanitize error message for frontend
+    const errorMsg = error.message || 'Unknown transcription error';
+    throw new Error(`Failed to transcribe video: ${errorMsg}`);
   } finally {
     // Clean up temporary audio file
     if (audioPath && fs.existsSync(audioPath)) {
