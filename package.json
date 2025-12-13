@@ -8,8 +8,15 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build:frontend": "cd frontend && npm run build"
   },
-  "keywords": ["remotion", "captioning", "video", "whisper"],
+  "keywords": [
+    "remotion",
+    "captioning",
+    "video",
+    "whisper"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "assemblyai": "^4.22.0"
+  }
 }
-
